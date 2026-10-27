@@ -9,11 +9,19 @@ on:
 
 jobs:
   build-shaders:
+    # Uses the runner targeted for Xcode 27 environments
     runs-on: xcode-27
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Force Xcode 27.0 version
+        run: |
+          # By default, this runner targets Xcode 27.1.
+          # This command explicitly switches the active path to Xcode 27.0.
+          sudo xcode-select -s /Applications/Xcode_27.app/Contents/Developer
+          xcodebuild -version
 
       - name: Create Temporary Test Shader
         run: |
