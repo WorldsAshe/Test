@@ -1,10 +1,6 @@
 name: Compile with Metal Toolchain
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -26,10 +22,12 @@ jobs:
               out[id] = 1.0f;
           }
           EOF
+
       - name: Compile Metal Shaders
         run: |
           mkdir -p build
           xcrun -sdk macosx metal -O3 src/Shaders.metal -o build/default.metallib
+
       - name: Upload Shaders Artifact
         uses: actions/upload-artifact@v4
         with:
