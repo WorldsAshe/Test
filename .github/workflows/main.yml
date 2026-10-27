@@ -1,0 +1,37 @@
+name: Compile with Metal Toolchain
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-shaders:
+    runs-on: xcode-27
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Temporary Test Shader
+        run: |
+          # Create the src directory and generate a valid dummy shader code
+          mkdir -p src
+          cat << 'EOF' > src/Shaders.metal
+          #include <metal_stdlib>
+          using namespace metal;
+          kernel void test_shader(device float *out [[buffer(0)]], uint id [[thread_position_in_grid]]) {
+              out[id] = 1.0f;
+          }
+          EOF
+      - name: Compile Metal Shaders
+        run: |
+          mkdir -p build
+          xcrun -sdk macosx metal -O3 src/Shaders.metal -o build/default.metallib
+      - name: Upload Shaders Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: metal-library
+          path: build/default.metallib
