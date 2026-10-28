@@ -4,7 +4,7 @@ on: [push, workflow_dispatch]
 
 jobs:
   test-cache:
-    runs-on: ubuntu-24.04 # En attendant la disponibilité générale d'ubuntu-26.04
+    runs-on: ubuntu-26.04 # En attendant la disponibilité générale d'ubuntu-26.04
     steps:
       - name: Setup Node.js
         uses: actions/setup-node@v4
