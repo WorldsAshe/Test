@@ -14,14 +14,26 @@ jobs:
           # SUCCESS LOOKS LIKE: Exactly 1 line (Pipeline-Depth 0).
           # FAILURE LOOKS LIKE: Missing file, or duplicate lines piled up.
 
-      - name: Check 2 — See if BrokenProxy is dead
+      - name: Delete obsolete APT proxy lines
         run: |
-          echo "=== Searching APT system memory for BrokenProxy ==="
-          apt-config dump | grep -i "BrokenProxy" || echo "BrokenProxy is dead and totally ignored."
-          # SUCCESS LOOKS LIKE: The log says "BrokenProxy is dead and totally ignored."
-          # FAILURE LOOKS LIKE: It prints a configuration line, meaning it is still active.
+          echo "=== Removing legacy proxy settings ==="
+          if [ -f /etc/apt/apt.conf.d/99bad_proxy ]; then
+            # Delete specific lines containing No-Cache and BrokenProxy
+            sudo sed -i '/Acquire::http::No-Cache/d' /etc/apt/apt.conf.d/99bad_proxy
+            sudo sed -i '/Acquire::BrokenProxy/d' /etc/apt/apt.conf.d/99bad_proxy
+            echo "Deletion complete."
+          else
+            echo "99bad_proxy file not found, nothing to delete."
+          fi
 
-      - name: Check 3 — Watch what APT sends to the network
+      - name: Post-Deletion Check — Verify file is clean
+        run: |
+          echo "=== Verifying remaining settings ==="
+          if [ -f /etc/apt/apt.conf.d/99bad_proxy ]; then
+            cat -n /etc/apt/apt.conf.d/99bad_proxy
+          fi
+
+      - name: Check 2 — Watch what APT sends to the network
         run: |
           echo "=== Catching outgoing HTTP headers ==="
           sudo apt-get update -o Debug::Acquire::http=true 2>&1 | grep -E "Cache-Control|Pragma" || echo "No network headers captured."
