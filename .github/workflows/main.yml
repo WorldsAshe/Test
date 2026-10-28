@@ -1,23 +1,12 @@
 name: Watch what APT sends to the network
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   check-system:
     runs-on: ubuntu-22.04
-    steps:    
-      - name: Delete obsolete APT proxy settings
-        run: |
-          echo "=== Removing legacy proxy settings ==="
-          if [ -f /etc/apt/apt.conf.d/99bad_proxy ]; then
-            # Completely remove the file containing the obsolete PR #4368 changes
-            sudo rm -f /etc/apt/apt.conf.d/99bad_proxy
-            echo "Deletion complete: 99bad_proxy has been removed."
-          else
-            echo "99bad_proxy file not found, nothing to delete."
-          fi
-      
+    steps:
       - name: Check 1 — Watch what APT sends to the network
         run: |
           echo "=== Catching outgoing HTTP headers ==="
