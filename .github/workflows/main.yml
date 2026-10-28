@@ -1,37 +1,36 @@
-name: Compile with Metal Toolchain
+name: Diagnostic - Verify Live APT Configuration
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:
+  workflow_dispatch: # Allows manual execution from the GitHub Actions UI
 
 jobs:
-  build-shaders:
-    runs-on: xcode-27
-
+  diagnose-runner:
+    runs-on: ubuntu-latest # Target the runner image you want to audit
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: 1. Verify Active Configuration File
+        run: |
+          echo "=== Inspecting /etc/apt/apt.conf.d/99bad_proxy ==="
+          if [ -f /etc/apt/apt.conf.d/99bad_proxy ]; then
+            cat -n /etc/apt/apt.conf.d/99bad_proxy
+          else
+            echo "File 99bad_proxy does not exist on this image."
+          fi
 
-      - name: Create Temporary Test Shader
+      - name: 2. Check Active APT Version
         run: |
-          # Create the src directory and generate a valid dummy shader code
-          mkdir -p src
-          cat << 'EOF' > src/Shaders.metal
-          #include <metal_stdlib>
-          using namespace metal;
-          kernel void test_shader(device float *out [[buffer(0)]], uint id [[thread_position_in_grid]]) {
-              out[id] = 1.0f;
-          }
-          EOF
-      - name: Compile Metal Shaders
+          echo "=== Checking Installed APT Binary Version ==="
+          apt --version
+          echo "Claim: Version 2.4+ natively fixes legacy redirector bugs."
+
+      - name: 3. Verify if BrokenProxy is Recognized by APT
         run: |
-          mkdir -p build
-          xcrun -sdk macosx metal -O3 src/Shaders.metal -o build/default.metallib
-      - name: Upload Shaders Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: metal-library
-          path: build/default.metallib
+          echo "=== Querying APT Configuration for BrokenProxy ==="
+          # If this returns empty, APT source code no longer reads or tracks this key
+          apt-config dump | grep -i "BrokenProxy" || echo "BrokenProxy is not recognized by this APT version."
+
+      - name: 4. Sniff Outgoing Cache-Control Network Headers
+        run: |
+          echo "=== Intercepting Outgoing HTTP Headers during Update ==="
+          # Triggers a real update using APT network debug mode to inspect outgoing headers
+          sudo apt-get update -o Debug::Acquire::http=true 2>&1 | grep -E "Cache-Control|Pragma" || echo "No explicit headers caught."
+          echo "Analysis: If 'no-cache' is visible, the proxy cache is being defeated."
