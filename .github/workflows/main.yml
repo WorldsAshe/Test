@@ -1,36 +1,29 @@
-name: Diagnostic - Verify Live APT Configuration
+name: Verify Live APT Settings
 
 on:
-  workflow_dispatch: # Allows manual execution from the GitHub Actions UI
+  workflow_dispatch: # This adds a "Run workflow" button in your GitHub UI
 
 jobs:
-  diagnose-runner:
-    runs-on: ubuntu-22.04 # Target the runner image you want to audit
+  check-system:
+    runs-on: ubuntu-22.04
     steps:
-      - name: 1. Verify Active Configuration File
+      - name: Check 1 — Look inside the configuration file
         run: |
-          echo "=== Inspecting /etc/apt/apt.conf.d/99bad_proxy ==="
-          if [ -f /etc/apt/apt.conf.d/99bad_proxy ]; then
-            cat -n /etc/apt/apt.conf.d/99bad_proxy
-          else
-            echo "File 99bad_proxy does not exist on this image."
-          fi
+          echo "=== Reading the proxy configuration file ==="
+          cat -n /etc/apt/apt.conf.d/99bad_proxy || echo "File does not exist."
+          # SUCCESS LOOKS LIKE: Exactly 1 line (Pipeline-Depth 0).
+          # FAILURE LOOKS LIKE: Missing file, or duplicate lines piled up.
 
-      - name: 2. Check Active APT Version
+      - name: Check 2 — See if BrokenProxy is dead
         run: |
-          echo "=== Checking Installed APT Binary Version ==="
-          apt --version
-          echo "Claim: Version 2.4+ natively fixes legacy redirector bugs."
+          echo "=== Searching APT system memory for BrokenProxy ==="
+          apt-config dump | grep -i "BrokenProxy" || echo "BrokenProxy is dead and totally ignored."
+          # SUCCESS LOOKS LIKE: The log says "BrokenProxy is dead and totally ignored."
+          # FAILURE LOOKS LIKE: It prints a configuration line, meaning it is still active.
 
-      - name: 3. Verify if BrokenProxy is Recognized by APT
+      - name: Check 3 — Watch what APT sends to the network
         run: |
-          echo "=== Querying APT Configuration for BrokenProxy ==="
-          # If this returns empty, APT source code no longer reads or tracks this key
-          apt-config dump | grep -i "BrokenProxy" || echo "BrokenProxy is not recognized by this APT version."
-
-      - name: 4. Sniff Outgoing Cache-Control Network Headers
-        run: |
-          echo "=== Intercepting Outgoing HTTP Headers during Update ==="
-          # Triggers a real update using APT network debug mode to inspect outgoing headers
-          sudo apt-get update -o Debug::Acquire::http=true 2>&1 | grep -E "Cache-Control|Pragma" || echo "No explicit headers caught."
-          echo "Analysis: If 'no-cache' is visible, the proxy cache is being defeated."
+          echo "=== Catching outgoing HTTP headers ==="
+          sudo apt-get update -o Debug::Acquire::http=true 2>&1 | grep -E "Cache-Control|Pragma" || echo "No network headers captured."
+          # SUCCESS LOOKS LIKE: You see 'Cache-Control: max-age=0' (Safe revalidation).
+          # FAILURE LOOKS LIKE: You see 'Cache-Control: no-cache' (This breaks proxy servers).
