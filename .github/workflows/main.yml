@@ -22,5 +22,5 @@ jobs:
         run: |
           echo "=== Catching outgoing HTTP headers ==="
           sudo apt-get update -o Debug::Acquire::http=true 2>&1 | grep -E "Cache-Control|Pragma" || echo "No network headers captured."
-          # SUCCESS LOOKS LIKE: You see 'Cache-Control: max-age=0' (Safe revalidation).
-          # FAILURE LOOKS LIKE: You see 'Cache-Control: no-cache' (This breaks proxy servers).
+          # Success looks Like: You see 'Cache-Control: max-age=0' (Safe revalidation).
+          # Failure looks Like: You see 'Cache-Control: no-cache' (This breaks proxy servers).
