@@ -1,15 +1,15 @@
 name: Node Compile Cache Test
 
-on: [push, workflow_dispatch]
+on: [workflow_dispatch]
 
 jobs:
   test-cache:
-    runs-on: ubuntu-26.04 # En attendant la disponibilité générale d'ubuntu-26.04
+    runs-on: ubuntu-26.04 
     steps:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24' # Le cache natif requiert Node.js v22 ou plus récent
+          node-version: '24' 
 
       - name: Run Node with Compile Cache Debug
         run: |
