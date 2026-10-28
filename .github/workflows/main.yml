@@ -7,7 +7,7 @@ jobs:
   check-system:
     runs-on: ubuntu-22.04
     steps:    
-      - name: Delete obsolete PR #4368 APT settings
+      - name: Delete obsolete PR modifications
         run: |
           echo "=== Removing all legacy PR #4368 modifications ==="
           
