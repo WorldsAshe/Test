@@ -1,15 +1,18 @@
-name: Watch what APT sends to the network
+name: Node Compile Cache Test
 
-on:
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
-  check-system:
-    runs-on: ubuntu-22.04
+  test-cache:
+    runs-on: ubuntu-24.04 # En attendant la disponibilité générale d'ubuntu-26.04
     steps:
-      - name: Watch what APT sends to the network
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24' # Le cache natif requiert Node.js v22 ou plus récent
+
+      - name: Run Node with Compile Cache Debug
         run: |
-          echo "=== Catching outgoing HTTP headers ==="
-          sudo apt-get update -o Debug::Acquire::http=true 2>&1 | grep -E "Cache-Control|Pragma" || echo "No network headers captured."
-          # Success looks Like: You see 'Cache-Control: max-age=0' (Safe revalidation).
-          # Failure looks Like: You see 'Cache-Control: no-cache' (This breaks proxy servers).
+          NODE_DEBUG_NATIVE=COMPILE_CACHE \
+          NODE_COMPILE_CACHE=/tmp/node-compile-cache \
+          node -p "require('node:module').enableCompileCache(); require('node:module').getCompileCacheDir()"
