@@ -7,7 +7,7 @@ jobs:
   check-system:
     runs-on: ubuntu-22.04
     steps:
-      - name: Check 1 — Watch what APT sends to the network
+      - name: Watch what APT sends to the network
         run: |
           echo "=== Catching outgoing HTTP headers ==="
           sudo apt-get update -o Debug::Acquire::http=true 2>&1 | grep -E "Cache-Control|Pragma" || echo "No network headers captured."
