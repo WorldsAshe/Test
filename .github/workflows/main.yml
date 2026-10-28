@@ -5,7 +5,7 @@ on:
 
 jobs:
   diagnose-runner:
-    runs-on: ubuntu-latest # Target the runner image you want to audit
+    runs-on: ubuntu-22.04 # Target the runner image you want to audit
     steps:
       - name: 1. Verify Active Configuration File
         run: |
