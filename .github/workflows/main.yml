@@ -6,21 +6,7 @@ on:
 jobs:
   check-system:
     runs-on: ubuntu-22.04
-    steps:    
-      - name: Delete obsolete PR modifications
-        run: |
-          echo "=== Removing all legacy PR #4368 modifications ==="
-          
-          # Delete all lines matching the specific PR changes across all apt config files
-          sudo sed -i '/Acquire::http::Pipeline-Depth 0;/d' /etc/apt/apt.conf.d/*
-          sudo sed -i '/Acquire::http::No-Cache true;/d' /etc/apt/apt.conf.d/*
-          sudo sed -i '/Acquire::BrokenProxy    true;/d' /etc/apt/apt.conf.d/*
-          
-          # Completely delete the specific 99bad_proxy file
-          sudo rm -f /etc/apt/apt.conf.d/99bad_proxy
-          
-          echo "Deletion complete."
-      
+    steps:
       - name: Watch what APT sends to the network
         run: |
           echo "=== Catching outgoing HTTP headers ==="
