@@ -7,16 +7,19 @@ jobs:
   check-system:
     runs-on: ubuntu-22.04
     steps:    
-      - name: Delete obsolete APT proxy settings
+      - name: Delete obsolete PR #4368 APT settings
         run: |
-          echo "=== Removing legacy proxy settings ==="
-          if [ -f /etc/apt/apt.conf.d/99bad_proxy ]; then
-            # Completely remove the file containing the obsolete PR #4368 changes
-            sudo rm -f /etc/apt/apt.conf.d/99bad_proxy
-            echo "Deletion complete: 99bad_proxy has been removed."
-          else
-            echo "99bad_proxy file not found, nothing to delete."
-          fi
+          echo "=== Removing all legacy PR #4368 HTTP header modifications ==="
+          
+          # Direct removal of all PR #4368 configuration lines across all apt config files
+          sudo sed -i '/Acquire::http::Pipeline-Depth/d' /etc/apt/apt.conf.d/*
+          sudo sed -i '/Acquire::http::Cache-Control/d' /etc/apt/apt.conf.d/*
+          sudo sed -i '/Acquire::http::User-Agent/d' /etc/apt/apt.conf.d/*
+          
+          # Direct removal of the legacy proxy file
+          sudo rm -f /etc/apt/apt.conf.d/99bad_proxy
+          
+          echo "Deletion complete."
       
       - name: Watch what APT sends to the network
         run: |
