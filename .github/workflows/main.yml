@@ -1,7 +1,7 @@
 name: Watch what APT sends to the network
 
 on:
-  workflow_dispatch: # This adds a "Run workflow" button in your GitHub UI
+  workflow_dispatch: 
 
 jobs:
   check-system:
