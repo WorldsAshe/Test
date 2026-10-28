@@ -9,14 +9,14 @@ jobs:
     steps:    
       - name: Delete obsolete PR #4368 APT settings
         run: |
-          echo "=== Removing all legacy PR #4368 HTTP header modifications ==="
+          echo "=== Removing all legacy PR #4368 modifications ==="
           
-          # Direct removal of all PR #4368 configuration lines across all apt config files
-          sudo sed -i '/Acquire::http::Pipeline-Depth/d' /etc/apt/apt.conf.d/*
-          sudo sed -i '/Acquire::http::Cache-Control/d' /etc/apt/apt.conf.d/*
-          sudo sed -i '/Acquire::http::User-Agent/d' /etc/apt/apt.conf.d/*
+          # Delete all lines matching the specific PR changes across all apt config files
+          sudo sed -i '/Acquire::http::Pipeline-Depth 0;/d' /etc/apt/apt.conf.d/*
+          sudo sed -i '/Acquire::http::No-Cache true;/d' /etc/apt/apt.conf.d/*
+          sudo sed -i '/Acquire::BrokenProxy    true;/d' /etc/apt/apt.conf.d/*
           
-          # Direct removal of the legacy proxy file
+          # Completely delete the specific 99bad_proxy file
           sudo rm -f /etc/apt/apt.conf.d/99bad_proxy
           
           echo "Deletion complete."
