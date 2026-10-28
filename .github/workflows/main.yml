@@ -1,4 +1,4 @@
-name: Verify Live APT Settings
+name: Watch what APT sends to the network
 
 on:
   workflow_dispatch: # This adds a "Run workflow" button in your GitHub UI
@@ -7,21 +7,7 @@ jobs:
   check-system:
     runs-on: ubuntu-22.04
     steps:
-      - name: Check 1 — Look inside the configuration file
-        run: |
-          echo "=== Reading the proxy configuration file ==="
-          cat -n /etc/apt/apt.conf.d/99bad_proxy || echo "File does not exist."
-          # SUCCESS LOOKS LIKE: Exactly 1 line (Pipeline-Depth 0).
-          # FAILURE LOOKS LIKE: Missing file, or duplicate lines piled up.
-
-      - name: Check 2 — See if BrokenProxy is dead
-        run: |
-          echo "=== Searching APT system memory for BrokenProxy ==="
-          apt-config dump | grep -i "BrokenProxy" || echo "BrokenProxy is dead and totally ignored."
-          # SUCCESS LOOKS LIKE: The log says "BrokenProxy is dead and totally ignored."
-          # FAILURE LOOKS LIKE: It prints a configuration line, meaning it is still active.
-
-      - name: Check 3 — Watch what APT sends to the network
+      - name: Check 1 — Watch what APT sends to the network
         run: |
           echo "=== Catching outgoing HTTP headers ==="
           sudo apt-get update -o Debug::Acquire::http=true 2>&1 | grep -E "Cache-Control|Pragma" || echo "No network headers captured."
