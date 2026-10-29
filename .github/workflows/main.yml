@@ -1,18 +1,37 @@
-name: Node Compile Cache Test
+name: Compile with Metal Toolchain
 
-on: [workflow_dispatch]
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  test-cache:
-    runs-on: ubuntu-26.04 
-    steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24' 
+  build-shaders:
+    runs-on: xcode-27
 
-      - name: Run Node with Compile Cache Debug
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Temporary Test Shader
         run: |
-          NODE_DEBUG_NATIVE=COMPILE_CACHE \
-          NODE_COMPILE_CACHE=/tmp/node-compile-cache \
-          node -p "require('node:module').enableCompileCache(); require('node:module').getCompileCacheDir()"
+          # Create the src directory and generate a valid dummy shader code
+          mkdir -p src
+          cat << 'EOF' > src/Shaders.metal
+          #include <metal_stdlib>
+          using namespace metal;
+          kernel void test_shader(device float *out [[buffer(0)]], uint id [[thread_position_in_grid]]) {
+              out[id] = 1.0f;
+          }
+          EOF
+      - name: Compile Metal Shaders
+        run: |
+          mkdir -p build
+          xcrun -sdk macosx metal -O3 src/Shaders.metal -o build/default.metallib
+      - name: Upload Shaders Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: metal-library
+          path: build/default.metallib
