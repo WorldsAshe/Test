@@ -5,7 +5,7 @@ on:
 
 jobs:
   check-system:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Watch what APT sends to the network
         run: |
