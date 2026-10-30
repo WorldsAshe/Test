@@ -1,15 +1,37 @@
-name: Watch what APT sends to the network
+name: Compile with Metal Toolchain
 
 on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
-  check-system:
-    runs-on: ubuntu-22.04
+  build-shaders:
+    runs-on: xcode-27
+
     steps:
-      - name: Watch what APT sends to the network
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Temporary Test Shader
         run: |
-          echo "=== Catching outgoing HTTP headers ==="
-          sudo apt-get update -o Debug::Acquire::http=true 2>&1 | grep -E "Cache-Control|Pragma" || echo "No network headers captured."
-          # Success looks Like: You see 'Cache-Control: max-age=0' (Safe revalidation).
-          # Failure looks Like: You see 'Cache-Control: no-cache' (This breaks proxy servers).
+          # Create the src directory and generate a valid dummy shader code
+          mkdir -p src
+          cat << 'EOF' > src/Shaders.metal
+          #include <metal_stdlib>
+          using namespace metal;
+          kernel void test_shader(device float *out [[buffer(0)]], uint id [[thread_position_in_grid]]) {
+              out[id] = 1.0f;
+          }
+          EOF
+      - name: Compile Metal Shaders
+        run: |
+          mkdir -p build
+          xcrun -sdk macosx metal -O3 src/Shaders.metal -o build/default.metallib
+      - name: Upload Shaders Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: metal-library
+          path: build/default.metallib
